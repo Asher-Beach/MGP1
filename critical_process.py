@@ -21,9 +21,10 @@ def maybe_crash(reason = "random fault"):
 
 def send_heartbeats(stop_event):
     # Push heartbeat to the monitor every HEARTBEAT_INTERVAL ms
-    with socket.create_connection((HOST, PORT)) as socket:
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as socket:
+        destination = (HOST, PORT)
         while not stop_event.is_set():
-            socket.send(HEARTBEAT_PAYLOAD.encode("utf-8"))
+            socket.sendto(HEARTBEAT_PAYLOAD.encode("utf-8"), destination)
             stop_event.wait(HEARTBEAT_INTERVAL / 1000.0)
 
 def main():
