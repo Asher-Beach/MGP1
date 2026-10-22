@@ -2,6 +2,7 @@ import os
 import random
 import socket
 import threading
+import time
 
 HOST = "127.0.0.1"
 PORT = 50000
@@ -16,15 +17,16 @@ def terminate(reason):
 
 def maybe_crash(reason = "random fault"):
     # Non-deterministic crash trigger on incoming requests
+    time.sleep(0.1)
     if random.random() < CRASH_PROBABILITY:
         terminate(reason)
 
 def send_heartbeats(stop_event):
     # Push heartbeat to the monitor every HEARTBEAT_INTERVAL ms
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as socket:
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
         destination = (HOST, PORT)
         while not stop_event.is_set():
-            socket.sendto(HEARTBEAT_PAYLOAD.encode("utf-8"), destination)
+            sender.sendto(HEARTBEAT_PAYLOAD.encode("utf-8"), destination)
             stop_event.wait(HEARTBEAT_INTERVAL / 1000.0)
 
 def main():

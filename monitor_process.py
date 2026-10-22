@@ -6,7 +6,7 @@ TIMEOUT = 10.0
 DESIRED_DATAGRAM = "SoSecret"
 known_threats = []
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
     server_socket.settimeout(TIMEOUT)
     server_socket.bind((HOST, PORT))
     client_isAlive = True
@@ -22,7 +22,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             
             if(datagram != DESIRED_DATAGRAM):
                 print("That's an attacker (or the service sends the wrong datagram.)")
-                known_threats.add(address)
+                known_threats.append(address)
             
             elif(address in known_threats):
                 print("This address has been put on the threat list, so its connections are ignored.") 
