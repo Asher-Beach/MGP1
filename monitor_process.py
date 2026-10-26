@@ -1,10 +1,20 @@
 import socket
+import time
+from datetime import datetime
 
 HOST = "127.0.0.1"
 PORT = 50000
 TIMEOUT = 10.0
 DESIRED_DATAGRAM = "SoSecret"
 known_threats = []
+
+
+def incidentHandler(incident):
+    print(f"Incident occured at {datetime.now()}.")
+    with open("log.txt", "a", encoding="utf-8") as file:
+        file.write(f"Security incident {incident} occured at {datetime.now()}\n")
+        file.close()
+
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
     server_socket.settimeout(TIMEOUT)
@@ -21,12 +31,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
             datagram = data.decode('utf-8')
             
             if(datagram != DESIRED_DATAGRAM):
-                print("That's an attacker (or the service sends the wrong datagram.)")
+                print(f"That's an attacker (or the service sends the wrong datagram.) Occured at {datetime.now()} from address {address}.")
                 known_threats.append(address)
+                incidentHandler("Potential Threat Detected")
             
             elif(address in known_threats):
-                print("This address has been put on the threat list, so its connections are ignored.") 
-
+                print(f"This address has been put on the threat list, so its connections are ignored. Occured at {datetime.now()} from address {address}.")
+                incidentHandler("Logged potential threat retried connection")
             elif(client_isAlive):
                 print("The service is still alive!")
             
@@ -35,12 +46,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
                 client_isAlive = True
 
         except socket.timeout:
-            print("10 seconds passed without a message! The client must be dead...")
+            print("10 seconds passed without a message! The client must be dead... sleeping for 10 seconds to see if it comes back afterwards.")
+            incidentHandler("Timeout Reached")
             client_isAlive = False
             continue
         except OSError:
             print("A buffer overflow occured, handled it safely!")
             continue
+
 
 
 
