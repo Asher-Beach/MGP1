@@ -49,8 +49,7 @@ def _capture_one_beat(capture_timeout):
     except OSError as e:
         # Port already held by the monitor, or nothing arrived in time.
         log(f"live capture unavailable ({e}); using known payload shape "
-            f"instead -- which is itself the point: the beat is a predictable "
-            f"constant.")
+            f"instead -- The beat is a predictable constant.")
         return HEARTBEAT_PAYLOAD.encode("utf-8")
 
 
@@ -104,7 +103,7 @@ def attack_flood(duration, workers):
 # --------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
-        description="Adversarial auditor for the MGP1 heartbeat monitor "
+        description="Adversarial auditor "
                     "(targets 127.0.0.1:50000).")
     sub = parser.add_subparsers(dest="attack", required=True)
 
