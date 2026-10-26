@@ -4,8 +4,12 @@ from datetime import datetime
 
 HOST = "127.0.0.1"
 PORT = 50000
+BACKUP_PORT = 50001
 TIMEOUT = 10.0
 DESIRED_DATAGRAM = "SoSecret"
+ALERT_DATAGRAM = "YourCoworkerIsDead"
+current_client = "Primary"
+client_isAlive = True
 known_threats = []
 
 
@@ -15,11 +19,21 @@ def incidentHandler(incident):
         file.write(f"Security incident {incident} occured at {datetime.now()}\n")
         file.close()
 
+def crashHandler(server_socket):
+    if(current_client == "Primary"):
+        print("Switching to backup service...")
+        server_socket.sendto(ALERT_DATAGRAM.encode("utf-8"), (HOST, BACKUP_PORT))
+        current_client = "Backup"
+    elif(current_client == "Backup"):
+        print("The backup service has died. very bad.")
+        current_client = "None"
+        client_isAlive = True
+    
+
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
     server_socket.settimeout(TIMEOUT)
     server_socket.bind((HOST, PORT))
-    client_isAlive = True
     while True:
         try:
             if(client_isAlive):
@@ -42,13 +56,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
                 print("The service is still alive!")
             
             else:
-                print("The service has come back to life!")
+                print("The service has come back to life! Be sure to get the backup online too!")
                 client_isAlive = True
+                current_client = "Primary"
 
         except socket.timeout:
-            print("10 seconds passed without a message! The client must be dead... sleeping for 10 seconds to see if it comes back afterwards.")
+            print("10 seconds passed without a message! The client must be dead.")
             incidentHandler("Timeout Reached")
-            client_isAlive = False
+            crashHandler(server_socket)
             continue
         except OSError:
             print("A buffer overflow occured, handled it safely!")
