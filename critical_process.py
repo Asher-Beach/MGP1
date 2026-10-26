@@ -8,7 +8,8 @@ HOST = "127.0.0.1"
 PORT = 50000
 HEARTBEAT_INTERVAL = 5           # T: ms between heartbeat sends
 HEARTBEAT_PAYLOAD = "SoSecret"   # must match monitor's DESIRED_DATAGRAM
-CRASH_PROBABILITY = 0.01         # % chance of failure state
+CRASH_PROBABILITY = 0.01
+BLACKLISTED_IPS = ["192.168.1.100", "192.168.1.101", "192.168.1.102"]         # % chance of failure state
 
 def terminate(reason):
     # Hard-exit the process immediately
@@ -20,6 +21,14 @@ def maybe_crash(reason = "random fault"):
     time.sleep(0.1)
     if random.random() < CRASH_PROBABILITY:
         terminate(reason)
+    else:
+        last_octet = random.randint(100, 110)
+        random_ip = f"192.168.1.{last_octet}"
+        if random_ip in BLACKLISTED_IPS:
+            print(f"BLACKLISTED IP {random_ip} ATTEMPTING CONNECTION.")
+        else:
+            print(f"Incoming request from {random_ip} is allowed.")
+
 
 def send_heartbeats(stop_event):
     # Push heartbeat to the monitor every HEARTBEAT_INTERVAL ms
