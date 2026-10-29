@@ -20,6 +20,7 @@ def incidentHandler(incident):
         file.close()
 
 def crashHandler(server_socket):
+    global current_client, client_isAlive
     if(current_client == "Primary"):
         print("Switching to backup service...")
         server_socket.sendto(ALERT_DATAGRAM.encode("utf-8"), (HOST, BACKUP_PORT))
@@ -27,7 +28,7 @@ def crashHandler(server_socket):
     elif(current_client == "Backup"):
         print("The backup service has died. very bad.")
         current_client = "None"
-        client_isAlive = True
+        client_isAlive = False
     
 
 
