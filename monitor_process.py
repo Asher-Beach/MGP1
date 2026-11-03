@@ -22,11 +22,11 @@ def incidentHandler(incident):
 def crashHandler(server_socket):
     global current_client, client_isAlive
     if(current_client == "Primary"):
-        print("Switching to backup service...")
+        print(f"[Failover Triggered] {datetime.now()} -- promoting backup node; sending failover signal to {HOST}:{BACKUP_PORT}.")
         server_socket.sendto(ALERT_DATAGRAM.encode("utf-8"), (HOST, BACKUP_PORT))
         current_client = "Backup"
     elif(current_client == "Backup"):
-        print("The backup service has died. very bad.")
+        print(f"[Backup Failed] {datetime.now()} -- backup node is also down; no standby remaining.")
         current_client = "None"
         client_isAlive = False
     
@@ -54,20 +54,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
                 print(f"This address has been put on the threat list, so its connections are ignored. Occured at {datetime.now()} from address {address}.")
                 incidentHandler("Logged potential threat retried connection")
             elif(client_isAlive):
-                print("The service is still alive!")
+                print("The service is still alive.")
             
             else:
-                print("The service has come back to life! Be sure to get the backup online too!")
+                print("The service has come back to life. Make sure backup node is up.")
                 client_isAlive = True
                 current_client = "Primary"
 
         except socket.timeout:
-            print("10 seconds passed without a message! The client must be dead.")
+            print(f"[Crash Detected] {datetime.now()} -- {TIMEOUT:.0f}s elapsed with no heartbeat from the {current_client} node.")
             incidentHandler("Timeout Reached")
             crashHandler(server_socket)
             continue
         except OSError:
-            print("A buffer overflow occured, handled it safely!")
+            print("A buffer overflow occured, handled safely.")
             continue
 
 

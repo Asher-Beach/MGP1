@@ -7,11 +7,13 @@ import time
 
 HOST = "127.0.0.1"
 PORT = 50000
+CLIENT_PORT = 50002              # port where clients query current service state
 HEARTBEAT_INTERVAL = 5           # T: milliseconds between heartbeat sends
 HEARTBEAT_PAYLOAD = "SoSecret"   # must match the monitor's DESIRED_DATAGRAM
 CRASH_PROBABILITY = 0.01         # % chance of failure state
 BLACKLISTED_IPS = ["192.168.1.100", "192.168.1.101", "192.168.1.102"]
 STATE_FILE = "state.json"
+NODE_ROLE = "Primary"            # the standby overwrites this with "Backup" on failover
 valid_attempts = 0
 invalid_attempts = 0
 
@@ -63,10 +65,34 @@ def send_heartbeats(stop_event):
             sender.sendto(HEARTBEAT_PAYLOAD.encode("utf-8"), destination)
             stop_event.wait(HEARTBEAT_INTERVAL / 1000.0)
 
+def serve_clients(stop_event):
+    # Answer client STATUS queries with the current operational state.
+    # Whichever node is live (primary or, after failover, the backup) binds
+    # CLIENT_PORT, so clients always reach the authoritative node at one address.
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as responder:
+        responder.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        responder.bind((HOST, CLIENT_PORT))
+        responder.settimeout(0.5)   # wake up periodically to re-check stop_event
+        while not stop_event.is_set():
+            try:
+                request, client_addr = responder.recvfrom(1024)
+            except socket.timeout:
+                continue
+            except OSError:
+                continue
+            if request.decode("utf-8", errors="ignore").strip().upper() == "STATUS":
+                reply = json.dumps({
+                    "node": NODE_ROLE,
+                    "valid_attempts": valid_attempts,
+                    "invalid_attempts": invalid_attempts,
+                })
+                responder.sendto(reply.encode("utf-8"), client_addr)
+
 def main():
     # Run the critical service
     stop_event = threading.Event()
     threading.Thread(target=send_heartbeats, args=(stop_event,), daemon=True).start()
+    threading.Thread(target=serve_clients, args=(stop_event,), daemon=True).start()
 
     # Service loop: inspect incoming requests, then inject a crash
     while True:
