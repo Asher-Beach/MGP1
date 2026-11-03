@@ -26,6 +26,7 @@ def main():
     # Once the monitor signals failover, run identically to the primary
     if wait_for_failover():
         critical_service.load_state()
+        critical_service.NODE_ROLE = "Backup"
         print(f"[Service Restored] backup assumed control at {datetime.now()}")
         print(f"\nState restored:\n\tValid Attempts: {critical_service.valid_attempts}\n\tInvalid Attempts: {critical_service.invalid_attempts}")
         print(f"\n--- Resuming Service ---\n")
