@@ -8,6 +8,11 @@
 * adversarial_audit.py (Attack 1 spoofing, Attack 2 replay, Attack 3 monitor DoS)
 * Adversarial Audit Summary
 * Step-by-step setup and execution instructions
+* Split-Brain and Tampered Checkpoint exploits
+* Part 1 video
+* Part 2 video
+* client_process.py and associated logic
+* critical_process.py (entry)
 
 **Pine Schneider:**
 * critical_process.py, aside from Client logic

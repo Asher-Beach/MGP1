@@ -125,14 +125,12 @@ def attack_splitbrain(repeat, interval_ms):
         "primary is still running, there are now two live primaries writing the same "
         "checkpoint -- split-brain achieved with no network-level packet dropping.")
 
-# Attack 5: Tampered Checkpoint (Part 2, Scenario 2)
+# Tampered Checkpoint
 # Passive redundancy restores state from STATE_FILE on failover with no integrity check.
 # An attacker with filesystem access can corrupt or forge the checkpoint:
-#   corrupt -> write invalid JSON. On failover load_state() hits JSONDecodeError and
-#              SILENTLY resets counters to 0/0 -- pre-crash state lost, no alert raised.
-#   inject  -> write attacker-chosen values. The backup restores them verbatim, so the
-#              adversary dictates post-failover state (e.g. zero the blocked-attempt
-#              count to erase evidence of an intrusion).
+# corrupt -> write invalid JSON. On failover load_state() hits JSONDecodeError and SILENTLY resets counters to 0/0 -- pre-crash state lost, no alert raised.
+# inject  -> write attacker-chosen values. The backup restores them verbatim, so the adversary dictates post-failover state (e.g. zero the blocked-attempt
+# count to erase evidence of an intrusion).
 
 def attack_tamper(mode, valid, invalid):
     log(f"ATTACK 5 (TAMPER): corrupting checkpoint {STATE_FILE!r} (mode={mode}).")
