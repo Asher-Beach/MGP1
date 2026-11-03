@@ -10,5 +10,9 @@
 * Step-by-step setup and execution instructions
 
 **Pine Schneider:**
-* Most of critical_process.py
+* critical_process.py, aside from Client logic
+* critical_service.py
+* backup_process.py
 * Service Overview
+* Software Architecture Diagram
+* Assorted bug fixes
